@@ -12,8 +12,6 @@ export const getTodos = async () => {
 };
 
 export const addTodo = async (todo: Omit<Todo, 'id'>) => {
-  await wait(150);
-
   return client.post<Todo>('/todos', todo);
 };
 

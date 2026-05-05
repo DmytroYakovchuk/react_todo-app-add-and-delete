@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 
 type Props = {
   newTitle: string;
@@ -15,7 +16,12 @@ export const Header: React.FC<Props> = ({
   onSubmit,
   isAdding,
   allCompleted,
+  inputRef,
 }) => {
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [isAdding]);
+
   return (
     <header className="todoapp__header">
       <button
@@ -26,10 +32,9 @@ export const Header: React.FC<Props> = ({
 
       <form onSubmit={onSubmit}>
         <input
-          //ref={inputRef}
+          ref={inputRef}
           value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-
+          onChange={e => setNewTitle(e.target.value)}
           disabled={isAdding}
           placeholder="What needs to be done?"
           className="todoapp__new-todo"

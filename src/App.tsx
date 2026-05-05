@@ -9,18 +9,12 @@ import { TempTodo } from './components/TempTodo';
 import React, { useEffect, useState, useRef } from 'react';
 
 import { Todo } from './api/types/Todo';
-import { addTodo, getTodos, deleteTodo, USER_ID } from './api/todos';
-
-interface Todo {
-  id: number;
-  title: string;
-  completed: boolean;
-}
+import { addTodo, deleteTodo, getTodos, USER_ID } from './api/todos';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState(Filter.All);
   const [newTitle, setNewTitle] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
@@ -36,10 +30,6 @@ export const App: React.FC = () => {
     }, 3000);
   };
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -53,7 +43,7 @@ export const App: React.FC = () => {
 
     setIsAdding(true);
 
-    const newTodo: Todo = {
+    const newTodo = {
       userId: USER_ID,
       title: trimmedTitle,
       completed: false,
@@ -64,8 +54,10 @@ export const App: React.FC = () => {
       ...newTodo,
     });
 
+    const promise = addTodo(newTodo);
+
     try {
-      const createdTodo = await addTodo(newTodo);
+      const createdTodo = await promise;
 
       setTodos(prev => [...prev, createdTodo]);
       setNewTitle('');
@@ -78,6 +70,24 @@ export const App: React.FC = () => {
     }
   };
 
+  const loadTodos = async () => {
+    try {
+      const data = await getTodos();
+
+      setTodos(data);
+    } catch {
+      showError('Unable to load todos');
+    }
+  };
+
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [isAdding]);
+
   const handleDelete = async (id: number) => {
     try {
       setDeletingIds(prev => [...prev, id]);
@@ -89,19 +99,30 @@ export const App: React.FC = () => {
       showError('Unable to delete a todo');
     } finally {
       setDeletingIds(prev => prev.filter(item => item !== id));
+      inputRef.current?.focus();
     }
   };
 
   const handleClearCompleted = async () => {
     const completed = todos.filter(todo => todo.completed);
 
-    try {
-      await Promise.all(completed.map(todo => deleteTodo(todo.id)));
+    const results = await Promise.allSettled(
+      completed.map(todo => deleteTodo(todo.id)),
+    );
 
-      setTodos(prev => prev.filter(todo => !todo.completed));
-    } catch {
-      showError('Error on delete');
+    const successIds = completed
+      .filter((_, i) => results[i].status === 'fulfilled')
+      .map(todo => todo.id);
+
+    const hasError = results.some(r => r.status === 'rejected');
+
+    setTodos(prev => prev.filter(todo => !successIds.includes(todo.id)),);
+
+    if (hasError) {
+      showError('Unable to delete a todo');
     }
+
+    inputRef.current?.focus();
   };
 
   const visibleTodos = todos.filter(todo => {
@@ -128,18 +149,19 @@ export const App: React.FC = () => {
           setNewTitle={setNewTitle}
           onSubmit={handleSubmit}
           isAdding={isAdding}
+          inputRef={inputRef}
           allCompleted={todos.every(t => t.completed)}
         />
 
         {(todos.length > 0 || tempTodo) && (
           <section className="todoapp__main" data-cy="TodoList">
-            {tempTodo && <TempTodo todo={tempTodo} />}
-
             <TodoList
               todos={visibleTodos}
               deletingIds={deletingIds}
               onDelete={handleDelete}
             />
+
+            {tempTodo && <TempTodo todo={tempTodo} />}
           </section>
         )}
 
