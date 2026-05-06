@@ -86,7 +86,15 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     inputRef.current?.focus();
-  }, [isAdding]);
+  }, []);
+
+  const handleToggle = (id: number) => {
+    setTodos(prev =>
+      prev.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -116,7 +124,7 @@ export const App: React.FC = () => {
 
     const hasError = results.some(r => r.status === 'rejected');
 
-    setTodos(prev => prev.filter(todo => !successIds.includes(todo.id)),);
+    setTodos(prev => prev.filter(todo => !successIds.includes(todo.id)));
 
     if (hasError) {
       showError('Unable to delete a todo');
@@ -159,6 +167,7 @@ export const App: React.FC = () => {
               todos={visibleTodos}
               deletingIds={deletingIds}
               onDelete={handleDelete}
+              onToggle={handleToggle}
             />
 
             {tempTodo && <TempTodo todo={tempTodo} />}

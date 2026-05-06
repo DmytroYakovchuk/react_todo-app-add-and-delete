@@ -5,9 +5,15 @@ type Props = {
   todos: Todo[];
   deletingIds: number[];
   onDelete: (id: number) => void;
+  onToggle: (id: number) => void;
 };
 
-export const TodoList: React.FC<Props> = ({ todos, deletingIds, onDelete }) => {
+export const TodoList: React.FC<Props> = ({
+  todos,
+  deletingIds,
+  onDelete,
+  onToggle,
+}) => {
   return (
     <>
       {todos.map(todo => (
@@ -16,7 +22,7 @@ export const TodoList: React.FC<Props> = ({ todos, deletingIds, onDelete }) => {
           todo={todo}
           isDeleting={deletingIds.includes(todo.id)}
           onDelete={onDelete}
-          // isLoading
+          onToggle={onToggle}
         />
       ))}
     </>
