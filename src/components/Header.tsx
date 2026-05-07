@@ -20,7 +20,7 @@ export const Header: React.FC<Props> = ({
 }) => {
   useEffect(() => {
     inputRef.current?.focus();
-  }, [isAdding]);
+  }, [isAdding, inputRef]);
 
   return (
     <header className="todoapp__header">

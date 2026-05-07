@@ -6,7 +6,7 @@ import { ErrorNotification } from './components/ErrorNotification';
 import { TodoList } from './components/TodoList';
 import { Filter } from './api/types/Filters';
 import { TempTodo } from './components/TempTodo';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 import { Todo } from './api/types/Todo';
 import { addTodo, deleteTodo, getTodos, USER_ID } from './api/todos';
@@ -70,7 +70,7 @@ export const App: React.FC = () => {
     }
   };
 
-  const loadTodos = async () => {
+  const loadTodos = useCallback(async () => {
     try {
       const data = await getTodos();
 
@@ -78,11 +78,11 @@ export const App: React.FC = () => {
     } catch {
       showError('Unable to load todos');
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadTodos();
-  }, []);
+  }, [loadTodos]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -91,8 +91,8 @@ export const App: React.FC = () => {
   const handleToggle = (id: number) => {
     setTodos(prev =>
       prev.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+      ),
     );
   };
 
